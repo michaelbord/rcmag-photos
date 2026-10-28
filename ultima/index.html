@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kosho Ultima</title>
+<style>
+  :root { --bg: #111; --fg: #eee; --muted: #888; --card: #1c1c1c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; }
+  header { padding: 20px 16px 8px; display: flex; align-items: baseline; gap: 12px; }
+  h1 { margin: 0; font-size: 1.4rem; font-weight: 600; }
+  header span { color: var(--muted); font-size: .9rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; padding: 16px; }
+  .grid figure { margin: 0; background: var(--card); border-radius: 6px; overflow: hidden; cursor: zoom-in; }
+  .grid img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; transition: transform .2s; }
+  .grid figure:hover img { transform: scale(1.04); }
+  .grid figcaption { font-size: .75rem; color: var(--muted); padding: 4px 8px; }
+  .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.95); display: none; align-items: center; justify-content: center; z-index: 10; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 92vw; max-height: 88vh; object-fit: contain; }
+  .lightbox .caption { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center; color: var(--muted); font-size: .9rem; }
+  .lightbox button { position: absolute; background: none; border: 0; color: #fff; font-size: 2.5rem; cursor: pointer; padding: 16px; opacity: .7; }
+  .lightbox button:hover { opacity: 1; }
+  .prev { left: 0; top: 50%; transform: translateY(-50%); }
+  .next { right: 0; top: 50%; transform: translateY(-50%); }
+  .close { top: 0; right: 0; font-size: 2rem !important; }
+</style>
+</head>
+<body>
+<header><h1>Kosho Ultima</h1><span id="count"></span></header>
+<main class="grid" id="grid"></main>
+
+<div class="lightbox" id="lightbox">
+  <button class="close" aria-label="Close">&times;</button>
+  <button class="prev" aria-label="Previous">&#8249;</button>
+  <img id="lbImg" alt="">
+  <button class="next" aria-label="Next">&#8250;</button>
+  <div class="caption" id="lbCaption"></div>
+</div>
+
+<script>
+// Image list generated from the folder contents
+const photos = [
+  "IMG_0458.JPG",
+  "IMG_0459.JPG",
+  "IMG_0460.JPG",
+  "IMG_0461.JPG",
+  "IMG_0462.JPG",
+  "IMG_0463.JPG",
+  "IMG_0464.JPG",
+  "IMG_0465.JPG",
+  "IMG_0466.JPG",
+  "IMG_0467.JPG",
+  "IMG_0468.JPG",
+  "IMG_0469.JPG",
+  "IMG_0470.JPG",
+  "IMG_0471.JPG",
+  "IMG_0472.JPG",
+  "IMG_0473.JPG",
+  "IMG_0474.JPG",
+  "IMG_0475.JPG",
+  "IMG_0476.JPG",
+  "IMG_0477.JPG",
+  "IMG_0478.JPG",
+  "IMG_0479.JPG",
+  "IMG_0480.JPG",
+  "IMG_0481.JPG",
+  "IMG_0482.JPG",
+  "IMG_0484.JPG",
+  "IMG_0485.JPG",
+  "IMG_0486.JPG",
+  "IMG_0487.JPG",
+  "IMG_0488.JPG",
+  "IMG_0489.JPG",
+  "IMG_0490.JPG",
+  "IMG_0491.JPG",
+  "IMG_0492.JPG",
+  "IMG_0493.JPG",
+  "IMG_0494.JPG",
+  "IMG_0495.JPG",
+  "IMG_0496.JPG",
+  "IMG_0497.JPG",
+  "IMG_0498.JPG",
+  "IMG_0499.JPG",
+  "IMG_0500.JPG",
+  "IMG_0501.JPG",
+  "IMG_0502.JPG",
+  "IMG_0503.JPG",
+  "IMG_0504.JPG",
+  "IMG_0505.JPG",
+  "IMG_0506.JPG",
+  "IMG_0507.JPG",
+  "IMG_0508.JPG",
+  "IMG_0509.JPG",
+  "IMG_0510.JPG",
+  "IMG_0511.JPG",
+  "IMG_0512.JPG",
+  "IMG_0513.JPG",
+  "IMG_0514.JPG",
+  "IMG_0515.JPG",
+  "IMG_0516.JPG",
+  "IMG_0517.JPG",
+  "IMG_0518.JPG",
+  "IMG_0519.JPG",
+  "IMG_0520.JPG",
+  "IMG_0521.JPG",
+  "IMG_0523.JPG",
+  "IMG_0524.JPG",
+  "IMG_0525.JPG",
+  "IMG_0526.JPG",
+  "IMG_0527.JPG",
+  "IMG_0528.JPG",
+  "IMG_0529.JPG",
+  "IMG_0530.JPG",
+  "IMG_0531.JPG",
+  "IMG_0532.JPG",
+  "IMG_0533.JPG",
+  "IMG_0534.JPG",
+  "IMG_0535.JPG",
+  "IMG_0536.JPG",
+  "IMG_0537.JPG",
+  "IMG_0538.JPG",
+  "IMG_0539.JPG",
+  "IMG_0540.JPG",
+  "IMG_0541.JPG",
+  "IMG_0542.JPG",
+  "IMG_0543.JPG",
+  "IMG_0544.JPG",
+  "IMG_0545.JPG",
+  "IMG_0546.JPG",
+  "IMG_0547.JPG",
+  "IMG_0548.JPG",
+];
+
+const grid = document.getElementById("grid");
+const lightbox = document.getElementById("lightbox");
+const lbImg = document.getElementById("lbImg");
+const lbCaption = document.getElementById("lbCaption");
+let current = 0;
+
+document.getElementById("count").textContent = photos.length + " photos";
+
+photos.forEach((src, i) => {
+  const fig = document.createElement("figure");
+  fig.innerHTML = '<img loading="lazy" src="' + src + '" alt="' + src + '"><figcaption>' + src + '</figcaption>';
+  fig.addEventListener("click", () => open(i));
+  grid.appendChild(fig);
+});
+
+function open(i) {
+  current = (i + photos.length) % photos.length;
+  lbImg.src = photos[current];
+  lbCaption.textContent = photos[current] + "  (" + (current + 1) + " / " + photos.length + ")";
+  lightbox.classList.add("open");
+}
+
+function close() { lightbox.classList.remove("open"); }
+
+lightbox.querySelector(".prev").addEventListener("click", e => { e.stopPropagation(); open(current - 1); });
+lightbox.querySelector(".next").addEventListener("click", e => { e.stopPropagation(); open(current + 1); });
+lightbox.querySelector(".close").addEventListener("click", close);
+lightbox.addEventListener("click", e => { if (e.target === lightbox) close(); });
+
+document.addEventListener("keydown", e => {
+  if (!lightbox.classList.contains("open")) return;
+  if (e.key === "ArrowLeft") open(current - 1);
+  else if (e.key === "ArrowRight") open(current + 1);
+  else if (e.key === "Escape") close();
+});
+</script>
+</body>
+</html>
